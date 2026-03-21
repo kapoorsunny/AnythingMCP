@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::process::Command;
+
 
 use crate::error::{McpWrapError, Result};
 use crate::registry::models::ToolArgValue;
@@ -54,8 +54,7 @@ impl CommandExecutor for ProcessCommandExecutor {
         let executable = &tokens[0];
         let static_args = &tokens[1..];
 
-        let mut cmd = Command::new(executable);
-        cmd.args(static_args);
+        let mut cmd = crate::parser::help_runner::build_command(executable, static_args);
 
         // Add dynamic arguments - each as discrete .arg() tokens, never shell-interpolated
         for (key, value) in args {

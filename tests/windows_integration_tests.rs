@@ -35,9 +35,12 @@ fn test_register_echo_tool() {
     let echo_path = fixture_path("echo_tool.cmd");
     cmd_with_tools_dir(&tmp)
         .args([
-            "register", "echo_test",
-            "--cmd", echo_path.to_str().unwrap(),
-            "--type", "sse",
+            "register",
+            "echo_test",
+            "--cmd",
+            echo_path.to_str().unwrap(),
+            "--type",
+            "sse",
             "--force",
         ])
         .assert()
@@ -52,9 +55,12 @@ fn test_register_and_list() {
 
     cmd_with_tools_dir(&tmp)
         .args([
-            "register", "echo_test",
-            "--cmd", echo_path.to_str().unwrap(),
-            "--type", "sse",
+            "register",
+            "echo_test",
+            "--cmd",
+            echo_path.to_str().unwrap(),
+            "--type",
+            "sse",
             "--force",
         ])
         .assert()
@@ -74,9 +80,12 @@ fn test_register_and_remove() {
 
     cmd_with_tools_dir(&tmp)
         .args([
-            "register", "echo_test",
-            "--cmd", echo_path.to_str().unwrap(),
-            "--type", "sse",
+            "register",
+            "echo_test",
+            "--cmd",
+            echo_path.to_str().unwrap(),
+            "--type",
+            "sse",
             "--force",
         ])
         .assert()
@@ -106,18 +115,26 @@ fn test_remove_all() {
 
     cmd_with_tools_dir(&tmp)
         .args([
-            "register", "tool1",
-            "--cmd", echo_path.to_str().unwrap(),
-            "--type", "sse", "--force",
+            "register",
+            "tool1",
+            "--cmd",
+            echo_path.to_str().unwrap(),
+            "--type",
+            "sse",
+            "--force",
         ])
         .assert()
         .success();
 
     cmd_with_tools_dir(&tmp)
         .args([
-            "register", "tool2",
-            "--cmd", echo_path.to_str().unwrap(),
-            "--type", "stdio", "--force",
+            "register",
+            "tool2",
+            "--cmd",
+            echo_path.to_str().unwrap(),
+            "--type",
+            "stdio",
+            "--force",
         ])
         .assert()
         .success();
@@ -141,9 +158,13 @@ fn test_register_no_help_tool() {
     let tool_path = fixture_path("no_help_tool.cmd");
     cmd_with_tools_dir(&tmp)
         .args([
-            "register", "no_help",
-            "--cmd", tool_path.to_str().unwrap(),
-            "--type", "sse", "--force",
+            "register",
+            "no_help",
+            "--cmd",
+            tool_path.to_str().unwrap(),
+            "--type",
+            "sse",
+            "--force",
         ])
         .assert()
         .success()
@@ -154,7 +175,9 @@ fn test_register_no_help_tool() {
 fn test_register_blocked_command() {
     let tmp = TempDir::new().unwrap();
     cmd_with_tools_dir(&tmp)
-        .args(["register", "bad_tool", "--cmd", "rm", "--type", "sse", "--force"])
+        .args([
+            "register", "bad_tool", "--cmd", "rm", "--type", "sse", "--force",
+        ])
         .assert()
         .failure()
         .stderr(predicate::str::contains("Blocked"));
@@ -171,7 +194,9 @@ fn test_block_custom_command() {
         .stdout(predicate::str::contains("Blocked command"));
 
     cmd_with_tools_dir(&tmp)
-        .args(["register", "editor", "--cmd", "notepad", "--type", "sse", "--force"])
+        .args([
+            "register", "editor", "--cmd", "notepad", "--type", "sse", "--force",
+        ])
         .assert()
         .failure()
         .stderr(predicate::str::contains("Not allowed"));
@@ -191,6 +216,16 @@ fn test_block_list() {
         .success()
         .stdout(predicate::str::contains("rm"))
         .stdout(predicate::str::contains("shutdown"));
+}
+
+#[test]
+fn test_block_reset() {
+    let tmp = TempDir::new().unwrap();
+    cmd_with_tools_dir(&tmp)
+        .args(["block", "--reset"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Reset blocklist"));
 }
 
 #[test]

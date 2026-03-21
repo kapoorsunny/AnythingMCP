@@ -2,6 +2,23 @@ use std::process::Command;
 
 use crate::error::{McpWrapError, Result};
 
+/// Build a Command that handles platform-specific executable invocation.
+/// On Windows, .cmd/.bat files must be run via `cmd.exe /C`.
+pub fn build_command(executable: &str, static_args: &[String]) -> Command {
+    let exe_lower = executable.to_lowercase();
+    if cfg!(target_os = "windows") && (exe_lower.ends_with(".cmd") || exe_lower.ends_with(".bat")) {
+        let mut cmd = Command::new("cmd.exe");
+        cmd.arg("/C");
+        cmd.arg(executable);
+        cmd.args(static_args);
+        cmd
+    } else {
+        let mut cmd = Command::new(executable);
+        cmd.args(static_args);
+        cmd
+    }
+}
+
 pub trait HelpRunner: Send + Sync {
     /// Runs help discovery for a command using platform-aware fallback chain:
     ///
@@ -28,8 +45,7 @@ impl ProcessHelpRunner {
         let executable = &tokens[0];
         let static_args = &tokens[1..];
 
-        let mut cmd = Command::new(executable);
-        cmd.args(static_args);
+        let mut cmd = build_command(executable, static_args);
         cmd.arg(flag);
 
         let child = cmd
