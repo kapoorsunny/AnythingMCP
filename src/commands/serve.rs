@@ -103,7 +103,12 @@ pub async fn run(
         eprintln!("STDIO transport closed (stdin ended)");
     });
 
-    let _ = tokio::join!(sse_handle, stdio_handle);
+    // Wait for either transport to finish — when STDIO closes (stdin ends),
+    // the server should exit rather than hanging on the SSE server.
+    tokio::select! {
+        _ = sse_handle => {},
+        _ = stdio_handle => {},
+    }
 
     Ok(())
 }
