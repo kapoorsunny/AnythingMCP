@@ -38,17 +38,23 @@ mcpw serve
 
 ## Installation
 
+### Homebrew (macOS / Linux)
+
+```bash
+brew tap kapoorsunny/tap
+brew install mcpw
+```
+
+### Pre-built binaries
+
+Download from the [releases page](https://github.com/kapoorsunny/AnythingMCP/releases) — available for macOS (ARM/Intel), Linux (ARM/x64), and Windows (x64).
+
 ### From source
 
 ```bash
 git clone https://github.com/kapoorsunny/AnythingMCP
 cd mcpw
 cargo install --path .
-```
-
-### Pre-built binaries
-
-Coming soon — builds for macOS, Linux, and Windows.
 
 ## CLI Reference
 

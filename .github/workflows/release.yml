@@ -99,3 +99,95 @@ jobs:
             artifacts/**/*.zip.sha256
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  update-homebrew:
+    name: Update Homebrew Formula
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract version
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+
+      - name: Download release tarballs and get SHA256
+        id: sha
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          BASE_URL="https://github.com/kapoorsunny/AnythingMCP/releases/download/v${VERSION}"
+
+          for target in aarch64-apple-darwin x86_64-apple-darwin x86_64-unknown-linux-gnu aarch64-unknown-linux-gnu; do
+            curl -sL "${BASE_URL}/mcpw-${target}.tar.gz" -o "mcpw-${target}.tar.gz"
+            sha=$(sha256sum "mcpw-${target}.tar.gz" | awk '{print $1}')
+            key=$(echo "$target" | tr '-' '_')
+            echo "${key}=${sha}" >> "$GITHUB_OUTPUT"
+          done
+
+      - name: Checkout homebrew-tap
+        uses: actions/checkout@v4
+        with:
+          repository: kapoorsunny/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: homebrew-tap
+
+      - name: Update formula
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          cat > homebrew-tap/Formula/mcpw.rb << 'FORMULA'
+          class Mcpw < Formula
+            desc "Turn any CLI tool or web API into an MCP server without writing code"
+            homepage "https://github.com/kapoorsunny/AnythingMCP"
+            version "VERSION_PLACEHOLDER"
+            license "MIT"
+
+            on_macos do
+              on_arm do
+                url "https://github.com/kapoorsunny/AnythingMCP/releases/download/vVERSION_PLACEHOLDER/mcpw-aarch64-apple-darwin.tar.gz"
+                sha256 "SHA_AARCH64_APPLE_DARWIN"
+              end
+
+              on_intel do
+                url "https://github.com/kapoorsunny/AnythingMCP/releases/download/vVERSION_PLACEHOLDER/mcpw-x86_64-apple-darwin.tar.gz"
+                sha256 "SHA_X86_64_APPLE_DARWIN"
+              end
+            end
+
+            on_linux do
+              on_arm do
+                url "https://github.com/kapoorsunny/AnythingMCP/releases/download/vVERSION_PLACEHOLDER/mcpw-aarch64-unknown-linux-gnu.tar.gz"
+                sha256 "SHA_AARCH64_UNKNOWN_LINUX_GNU"
+              end
+
+              on_intel do
+                url "https://github.com/kapoorsunny/AnythingMCP/releases/download/vVERSION_PLACEHOLDER/mcpw-x86_64-unknown-linux-gnu.tar.gz"
+                sha256 "SHA_X86_64_UNKNOWN_LINUX_GNU"
+              end
+            end
+
+            def install
+              bin.install "mcpw"
+            end
+
+            test do
+              assert_match "mcpw", shell_output("#{bin}/mcpw --version")
+            end
+          end
+          FORMULA
+
+          # Replace placeholders
+          sed -i "s/VERSION_PLACEHOLDER/${VERSION}/g" homebrew-tap/Formula/mcpw.rb
+          sed -i "s/SHA_AARCH64_APPLE_DARWIN/${{ steps.sha.outputs.aarch64_apple_darwin }}/g" homebrew-tap/Formula/mcpw.rb
+          sed -i "s/SHA_X86_64_APPLE_DARWIN/${{ steps.sha.outputs.x86_64_apple_darwin }}/g" homebrew-tap/Formula/mcpw.rb
+          sed -i "s/SHA_AARCH64_UNKNOWN_LINUX_GNU/${{ steps.sha.outputs.aarch64_unknown_linux_gnu }}/g" homebrew-tap/Formula/mcpw.rb
+          sed -i "s/SHA_X86_64_UNKNOWN_LINUX_GNU/${{ steps.sha.outputs.x86_64_unknown_linux_gnu }}/g" homebrew-tap/Formula/mcpw.rb
+
+          # Fix indentation (heredoc adds extra spaces)
+          sed -i 's/^          //' homebrew-tap/Formula/mcpw.rb
+
+      - name: Commit and push
+        run: |
+          cd homebrew-tap
+          git config user.name "Abhishek Kapoor"
+          git config user.email "kapoor@capecode.in"
+          git add Formula/mcpw.rb
+          git commit -m "Update mcpw to ${{ steps.version.outputs.version }}"
+          git push
