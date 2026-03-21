@@ -14,28 +14,6 @@ Both types are served simultaneously over STDIO (for local AI clients) and SSE (
 
 No schemas to write. No code to maintain. Just point at a command or API and go.
 
-## Quick Start
-
-```bash
-# Install
-cargo install --path .
-
-# Register a CLI tool
-mcpw register resize_image --cmd "python resize.py"
-
-# Import an entire API from OpenAPI spec
-mcpw import https://petstore3.swagger.io/api/v3/openapi.json --type sse
-
-# See what's registered
-mcpw list
-
-# Test a tool locally
-mcpw test resize_image --args '{"input": "photo.jpg", "width": 640}'
-
-# Start the MCP server (both STDIO and SSE)
-mcpw serve
-```
-
 ## Installation
 
 ### Homebrew (macOS / Linux)
@@ -55,6 +33,26 @@ Download from the [releases page](https://github.com/kapoorsunny/AnythingMCP/rel
 git clone https://github.com/kapoorsunny/AnythingMCP
 cd mcpw
 cargo install --path .
+```
+
+## Quick Start
+
+```bash
+# Register a CLI tool
+mcpw register resize_image --cmd "python resize.py"
+
+# Import an entire API from OpenAPI spec
+mcpw import https://petstore3.swagger.io/api/v3/openapi.json --type sse
+
+# See what's registered
+mcpw list
+
+# Test a tool locally
+mcpw test resize_image --args '{"input": "photo.jpg", "width": 640}'
+
+# Start the MCP server (both STDIO and SSE)
+mcpw serve
+```
 
 ## CLI Reference
 
