@@ -1,3 +1,7 @@
+// Integration tests use .sh/.py fixture scripts which require bash/python.
+// These are not available on Windows CI, so skip the entire file there.
+#![cfg(not(target_os = "windows"))]
+
 use assert_cmd::Command;
 use predicates::prelude::*;
 use std::path::PathBuf;
