@@ -6,7 +6,7 @@ If you discover a security vulnerability in mcpw, please report it responsibly.
 
 **Do NOT open a public issue for security vulnerabilities.**
 
-Instead, email: **kapoor@capecode.in**
+Instead, email
 
 Include:
 - Description of the vulnerability
