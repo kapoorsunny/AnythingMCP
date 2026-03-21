@@ -1,0 +1,29 @@
+# Build
+/target
+
+# Claude Code
+CLAUDE.md
+.playwright-mcp/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp files
+*.tmp
+
+# Local config (user's registered tools)
+tools.json
+api_tools.json
+blocklist.json
+mcpw.log
+
+# Docs generated during development
+docs/superpowers/
