@@ -233,7 +233,82 @@ mcpw block --reset                                   # reset to defaults
 
 Dangerous commands (rm, shutdown, dd, bash, etc.) are blocked by default. Blocking a command also removes any already-registered tools using it. Use `--allow-unsafe` on `register` to override.
 
+### `doctor` — Diagnose configuration issues
+
+```bash
+mcpw doctor
+```
+
+Runs diagnostic checks on your setup: tools directory, JSON file validity, command reachability, env vars for API auth, and blocklist health. Each check reports PASS, WARN, or FAIL. Exit code 0 if no failures, 1 otherwise.
+
+### `config` — Generate client configuration
+
+```bash
+mcpw config --client claude-desktop
+mcpw config --client cursor
+mcpw config --client vscode
+mcpw config --client claude-code
+mcpw config --client claude-desktop --port 8080 --progressive
+```
+
+Generates the exact JSON snippet needed for each MCP client, with the correct format and file location. No more manual JSON editing.
+
+### `export` / `import-config` — Portable tool bundles
+
+```bash
+# Export all tools
+mcpw export > my-tools.json
+
+# Export a single tool
+mcpw export --tool resize_image > resize.json
+
+# Import on another machine or share with teammates
+mcpw import-config my-tools.json
+```
+
+Exports CLI and API tool registrations as portable JSON. Use this to share setups, back up configs, or replicate across machines.
+
+### `validate` — Detect schema drift
+
+```bash
+mcpw validate                     # validate all CLI tools
+mcpw validate --tool resize       # validate a specific tool
+```
+
+Re-runs help discovery on registered tools and compares parameters against the stored schema. Reports added/removed parameters. Exit code 0 if no drift, 1 if drift detected.
+
+### `update` — Refresh tool parameters
+
+```bash
+mcpw update --tool resize_image   # re-discover params for one tool
+mcpw update                       # refresh all tools
+mcpw update --dry-run             # preview changes without applying
+```
+
+When your underlying CLI tool changes (new flags, removed flags), `update` re-runs help discovery and saves the updated schema. Use `--dry-run` to preview what would change.
+
+### `status` — Server health check
+
+```bash
+mcpw status                       # human-readable output
+mcpw status --json                # machine-readable (for monitoring)
+mcpw status --port 8080           # check specific SSE port
+```
+
+Shows whether the server is running, PID, tool counts, SSE port status, and recent log activity. Exit code 0 if running, 1 if not.
+
+### `dry-run` — Preview tool execution
+
+```bash
+mcpw dry-run my_tool --args '{"input": "data.csv"}'
+mcpw dry-run get_user --args '{"id": "123"}'
+```
+
+Shows the exact command (CLI) or HTTP request (API) that would be executed — without actually running it. For CLI tools, displays the full subprocess invocation with all argument tokens. For API tools, shows method, URL, headers, auth status, and body.
+
 ## Connecting to AI Clients
+
+> **Tip:** Run `mcpw config --client <name>` to auto-generate the config snippet for any client below.
 
 ### Claude Desktop
 
@@ -401,7 +476,7 @@ Set `MCPW_TOOLS_DIR` environment variable to use a custom directory.
 
 ```bash
 cargo build              # Build
-cargo test               # Run all tests (99 tests)
+cargo test               # Run all tests (192 tests)
 cargo clippy -- -D warnings  # Lint
 cargo fmt --check        # Format check
 ```

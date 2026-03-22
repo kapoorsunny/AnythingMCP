@@ -1,6 +1,6 @@
 [package]
 name = "mcpw"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2021"
 description = "Turn any CLI tool or web API into an MCP server without writing code"
 license = "MIT"

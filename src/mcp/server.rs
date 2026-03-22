@@ -903,7 +903,10 @@ mod tests {
 
         let response = state.handle_request(&request);
         assert_eq!(response["result"]["serverInfo"]["name"], "mcpw");
-        assert_eq!(response["result"]["serverInfo"]["version"], "1.0.0");
+        assert_eq!(
+            response["result"]["serverInfo"]["version"],
+            env!("CARGO_PKG_VERSION")
+        );
         assert!(response["result"]["capabilities"]["tools"].is_object());
     }
 
