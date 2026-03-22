@@ -268,6 +268,171 @@ async fn main() {
             }
         }
 
+        Commands::Config {
+            client,
+            port,
+            progressive,
+        } => {
+            if let Err(e) = commands::config::run(&client, None, port, progressive) {
+                eprintln!("Error: {}", e);
+                std::process::exit(1);
+            }
+        }
+
+        Commands::Export { tool } => {
+            let registry = match JsonFileRegistry::new(tools_path.clone()) {
+                Ok(r) => r,
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+            };
+
+            let api_tools_path = get_api_tools_path();
+            let api_registry = openapi::store::ApiToolRegistry::new(api_tools_path).ok();
+
+            if let Err(e) = commands::export::run(&registry, api_registry.as_ref(), tool.as_deref())
+            {
+                eprintln!("Error: {}", e);
+                std::process::exit(1);
+            }
+        }
+
+        Commands::ImportConfig { file } => {
+            let registry = match JsonFileRegistry::new(tools_path.clone()) {
+                Ok(r) => r,
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+            };
+
+            let api_tools_path = get_api_tools_path();
+            let api_registry = openapi::store::ApiToolRegistry::new(api_tools_path).ok();
+
+            if let Err(e) = commands::export::run_import(&file, &registry, api_registry.as_ref()) {
+                eprintln!("Error: {}", e);
+                std::process::exit(1);
+            }
+        }
+
+        Commands::DryRun { name, args } => {
+            let registry = match JsonFileRegistry::new(tools_path.clone()) {
+                Ok(r) => r,
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+            };
+
+            let api_tools_path = get_api_tools_path();
+            let api_registry = openapi::store::ApiToolRegistry::new(api_tools_path).ok();
+
+            if let Err(e) = commands::dry_run::run(&registry, api_registry.as_ref(), &name, &args) {
+                eprintln!("Error: {}", e);
+                std::process::exit(1);
+            }
+        }
+
+        Commands::Doctor => {
+            let registry = match JsonFileRegistry::new(tools_path.clone()) {
+                Ok(r) => r,
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+            };
+
+            let api_tools_path = get_api_tools_path();
+            let api_registry = openapi::store::ApiToolRegistry::new(api_tools_path).ok();
+
+            match commands::doctor::run(&tools_path, &registry, api_registry.as_ref()) {
+                Ok(exit_code) => {
+                    if exit_code != 0 {
+                        std::process::exit(exit_code);
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+
+        Commands::Status { port, json } => {
+            let registry = match JsonFileRegistry::new(tools_path.clone()) {
+                Ok(r) => r,
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+            };
+
+            let api_tools_path = get_api_tools_path();
+            let api_registry = openapi::store::ApiToolRegistry::new(api_tools_path).ok();
+
+            match commands::status::run(&tools_path, &registry, api_registry.as_ref(), port, json) {
+                Ok(exit_code) => {
+                    if exit_code != 0 {
+                        std::process::exit(exit_code);
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+
+        Commands::Update { tool, dry_run } => {
+            let registry = match JsonFileRegistry::new(tools_path.clone()) {
+                Ok(r) => r,
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+            };
+
+            let help_runner = ProcessHelpRunner::new();
+            let help_parser = HeuristicHelpParser::new();
+
+            if let Err(e) = commands::update::run(
+                &registry,
+                &help_runner,
+                &help_parser,
+                tool.as_deref(),
+                dry_run,
+            ) {
+                eprintln!("Error: {}", e);
+                std::process::exit(1);
+            }
+        }
+
+        Commands::Validate { tool } => {
+            let registry = match JsonFileRegistry::new(tools_path.clone()) {
+                Ok(r) => r,
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+            };
+
+            let help_runner = ProcessHelpRunner::new();
+            let help_parser = HeuristicHelpParser::new();
+
+            match commands::validate::run(&registry, &help_runner, &help_parser, tool.as_deref()) {
+                Ok(exit_code) => {
+                    if exit_code != 0 {
+                        std::process::exit(exit_code);
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+
         Commands::Logs { tail, follow } => {
             if let Err(e) = commands::logs::run(&tools_path, follow, tail) {
                 eprintln!("Error: {}", e);

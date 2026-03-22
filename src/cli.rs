@@ -519,6 +519,202 @@ EXAMPLES:
         command: String,
     },
 
+    /// Generate MCP client configuration snippet
+    #[command(long_about = "\
+Generate the JSON configuration snippet needed to connect an MCP client to mcpw. \
+Supports Claude Desktop, Claude Code, Cursor, and VS Code.
+
+Each client uses a slightly different config format and file location. This command \
+outputs the exact snippet and tells you where to paste it.
+
+SUPPORTED CLIENTS:
+  claude-desktop    Claude Desktop app (macOS/Windows)
+  claude-code       Claude Code CLI
+  cursor            Cursor IDE
+  vscode            VS Code with Copilot
+
+EXAMPLES:
+  mcpw config --client claude-desktop
+  mcpw config --client vscode
+  mcpw config --client cursor --port 8080
+  mcpw config --client claude-code --progressive")]
+    Config {
+        /// Target client: claude-desktop, claude-code, cursor, vscode
+        #[arg(long)]
+        client: String,
+
+        /// SSE port (included in config if not 3000)
+        #[arg(long, default_value = "3000")]
+        port: u16,
+
+        /// Include --progressive flag in config
+        #[arg(long)]
+        progressive: bool,
+    },
+
+    /// Export tool registrations as portable JSON
+    #[command(long_about = "\
+Export all registered tools (CLI and API) as a portable JSON bundle. \
+Use this to share your tool setup with teammates, back up your config, \
+or replicate across machines.
+
+OUTPUT:
+  JSON to stdout containing CLI tools, API tools, and version info.
+
+EXAMPLES:
+  mcpw export > my-tools.json
+  mcpw export --tool resize_image > single-tool.json")]
+    Export {
+        /// Export only a specific tool by name
+        #[arg(long)]
+        tool: Option<String>,
+    },
+
+    /// Import tools from an exported JSON bundle
+    #[command(
+        name = "import-config",
+        long_about = "\
+Import tool registrations from a previously exported JSON bundle file. \
+This adds all CLI and API tools from the bundle into your local registry, \
+overwriting any existing tools with the same name.
+
+EXAMPLES:
+  mcpw import-config my-tools.json
+  mcpw import-config /path/to/team-tools.json"
+    )]
+    ImportConfig {
+        /// Path to the exported JSON file
+        file: String,
+    },
+
+    /// Preview a tool call without executing it
+    #[command(
+        name = "dry-run",
+        long_about = "\
+Preview what a tool call would do without actually executing it. Shows the \
+exact command (CLI) or HTTP request (API) that would be sent.
+
+For CLI tools: displays the full command with all arguments expanded as \
+discrete tokens — exactly what the subprocess would receive.
+
+For API tools: displays the HTTP method, URL with path params substituted, \
+query parameters, headers, auth status, and request body.
+
+EXAMPLES:
+  mcpw dry-run my_tool --args '{\"input\": \"data.csv\"}'
+  mcpw dry-run get_user --args '{\"id\": \"123\"}'
+  mcpw dry-run deploy"
+    )]
+    DryRun {
+        /// Name of the tool to preview
+        name: String,
+
+        /// JSON arguments (same format as 'mcpw test')
+        #[arg(long, default_value = "{}")]
+        args: String,
+    },
+
+    /// Diagnose common configuration issues
+    #[command(long_about = "\
+Run diagnostic checks on your mcpw installation and registered tools. \
+Verifies that the tools directory exists, configuration files are valid JSON, \
+all registered CLI tool commands are reachable, API tool auth environment \
+variables are set, and the blocklist is well-formed.
+
+Each check reports PASS, WARN, or FAIL. Exit code 0 if no failures, 1 otherwise.
+
+CHECKS PERFORMED:
+  Tools directory      ~/.mcpw/ exists
+  tools.json           Valid JSON with correct schema
+  api_tools.json       Valid JSON with correct schema (if present)
+  blocklist.json       Valid JSON (if present)
+  CLI tool commands    Each registered tool's executable is in PATH
+  API auth env vars    Environment variables for auth are set
+
+EXAMPLES:
+  mcpw doctor")]
+    Doctor,
+
+    /// Show server and tool status
+    #[command(long_about = "\
+Show the current status of mcpw — whether the server is running, how many \
+tools are registered, SSE port status, and recent log activity.
+
+Useful for monitoring and debugging. Exit code 0 if server is running, 1 if not.
+
+OUTPUT:
+  Server status (running/not running, PID)
+  CLI and API tool counts
+  SSE port and connectivity
+  Log file status and last entry
+
+EXAMPLES:
+  mcpw status
+  mcpw status --json
+  mcpw status --port 8080")]
+    Status {
+        /// Check SSE on this port (default 3000)
+        #[arg(long, default_value = "3000")]
+        port: u16,
+
+        /// Output as JSON (for scripting/monitoring)
+        #[arg(long)]
+        json: bool,
+    },
+
+    /// Re-discover parameters for registered tools (schema refresh)
+    #[command(long_about = "\
+Re-run help discovery for registered CLI tools and update their parameter \
+schemas. Use this when the underlying tool has changed (new flags added, \
+old flags removed) and you want the MCP schema to reflect the current state.
+
+For each tool, re-runs the help parser, compares parameters, and updates \
+the registration if changes are found.
+
+OPTIONS:
+  --tool NAME    Update only a specific tool
+  --dry-run      Show what would change without saving
+  --all          Update all CLI tools (default)
+
+EXAMPLES:
+  mcpw update --tool resize_image     Re-discover params for one tool
+  mcpw update --all                   Refresh all tools
+  mcpw update --dry-run               Preview changes without applying")]
+    Update {
+        /// Update only a specific tool by name
+        #[arg(long)]
+        tool: Option<String>,
+
+        /// Preview changes without applying
+        #[arg(long)]
+        dry_run: bool,
+    },
+
+    /// Validate registered tools for schema drift
+    #[command(long_about = "\
+Validate registered CLI tools by re-running help discovery and comparing the \
+current parameters against the stored schema. Detects schema drift — when a \
+tool's flags change but the MCP registration hasn't been updated.
+
+CHECKS:
+  - Command executable exists and is reachable
+  - Help output can be obtained
+  - Current parameters match stored schema
+  - Reports added/removed parameters
+
+EXIT CODES:
+  0    All tools valid (no drift)
+  1    Drift or errors detected
+
+EXAMPLES:
+  mcpw validate                    Validate all CLI tools
+  mcpw validate --tool resize      Validate a specific tool")]
+    Validate {
+        /// Validate only a specific tool by name
+        #[arg(long)]
+        tool: Option<String>,
+    },
+
     /// View mcpw logs
     #[command(long_about = "\
 View the mcpw log file (~/.mcpw/mcpw.log). Logs are written automatically \

@@ -1,4 +1,8 @@
 pub mod block;
+pub mod config;
+pub mod doctor;
+pub mod dry_run;
+pub mod export;
 pub mod import;
 pub mod inspect;
 pub mod list;
@@ -6,4 +10,7 @@ pub mod logs;
 pub mod register;
 pub mod remove;
 pub mod serve;
+pub mod status;
 pub mod test_tool;
+pub mod update;
+pub mod validate;
